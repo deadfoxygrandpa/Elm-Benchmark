@@ -17,7 +17,7 @@ extra-source-files:  README.md
 data-files:          prescript.js postscript.js
 cabal-version:       >=1.10
 
-executable ElmBenchmark
+executable elm-benchmark
   main-is:             mkExe.hs
   build-depends:       base >=4.6 && <4.7
                        , Elm >= 0.11
