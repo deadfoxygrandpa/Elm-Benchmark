@@ -9,7 +9,7 @@ import           System.IO (hClose, openTempFile)
 import           System.Directory
 
 import           Elm.Internal.Paths as Elm
-import qualified Paths_ElmIO as ElmIO
+import qualified Paths_ElmBenchmark as ElmBenchmark
 
 catToFile :: [FilePath] -> FilePath -> IO ()
 catToFile files outfile = do
@@ -25,30 +25,17 @@ buildJS code infile outfile = case code of
     exitWith code
   ExitSuccess -> do
     putStrLn "Making exe"
-    prescript <- ElmIO.getDataFileName "prescript.js"
-    handler   <- ElmIO.getDataFileName "handler.js"
+    prescript    <- ElmBenchmark.getDataFileName "prescript.js"
+    postscript   <- ElmBenchmark.getDataFileName "postscript.js"
     catToFile [ prescript
               , Elm.runtime
               , "build" </> replaceExtension infile "js"
-              , handler ]
+              , postscript ]
               outfile
 
 compile :: FilePath -> IO ExitCode
 compile infile = do
-  dir <- ElmIO.getDataDir
-  rawSystem "elm" ["-mo", "--src-dir=" ++ dir, infile]
-
-addImports :: FilePath -> IO ()
-addImports src = do
-  imports <- ElmIO.getDataFileName "imports.elm"
-  imports' <- readFile imports
-  srcFile <- strictRead src
-  let (firstLine:rest) = lines srcFile 
-  let new = unlines $ [firstLine, imports'] ++ rest
-  writeFile src new
-  where strictRead file = do 
-          string <- readFile file 
-          length string `seq` return string
+  rawSystem "elm" ["-mo", infile]
 
 main :: IO ()
 main = do
@@ -57,25 +44,4 @@ main = do
     [infile, outfile] -> do
       code <- compile infile
       buildJS code infile outfile
-    [flag, infile, outfile] -> do
-      case flag of
-        "--default-ports" -> do
-          -- Adding boilerplate to a temp file
-          ports <- ElmIO.getDataFileName "boilerplate.elm"
-          (src,handle) <- openTempFile "" infile
-          hClose handle
-          catToFile [infile, ports] src
-          addImports src
-
-          -- Build output js file
-          code <- compile src
-          buildJS code src outfile
-
-          -- Cleanup
-          removeFile src
-          removeFile $ "build" </> replaceExtension src "js"
-          removeFile $ "cache" </> replaceExtension src "elmi"
-          removeFile $ "cache" </> replaceExtension src "elmo"
-
-        _ -> putStrLn $ "Invalid flag: " ++ show flag ++ ". Valid flags are: --default-ports" 
     _ -> putStrLn $ "Expected input file and output file arguments, but got " ++ show (length args) ++ " args."
