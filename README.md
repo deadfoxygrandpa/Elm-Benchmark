@@ -1,18 +1,17 @@
-IO in Elm [![Build Status](https://travis-ci.org/maxsnew/IO.png?branch=master)](https://travis-ci.org/maxsnew/IO)
+Benchmark.js in Elm
 =========
 
-This repo provides a library for writing console-based programs in
+This repo provides a library for writing console-based Benchmark.js tests in
 Elm.
 
 Getting Started
 ---------------
 
-Before you begin, you must pull in both the Elm and node.js dependencies:
+Before you begin, you must pull in both the node.js dependencies (jsdom and benchmark):
 
-```
-$ cabal install elm-get # If you don't already have it installed
+```bash
 $ cabal install
-$ elm-get install evancz/automaton
+$ npm install benchmark
 $ npm install jsdom
 ```
 
@@ -20,103 +19,60 @@ $ npm install jsdom
 
 Example
 -------
-An elm Program:
+Each test must be an outgoing `port` of type `Int -> Int`. Define any number
+of these `Int -> Int` tests in a module named `Benchmark`. Here's an example:
 ```haskell
-import open IO.IO
-import IO.Runner (Request, Response)
-import IO.Runner as Run
+-- Test.elm
+module Benchmark where
 
-hello : IO ()
-hello = putStrLn "Hello, Console!" >>
-        putStrLn "I'll echo your input:" >>
-        (getLine >>= putStrLn) >>
-        putStrLn "That's all, folks!" >>
-        exit 0
+port testAdd10 : Int -> Int
+port testAdd10 = \n -> n + 10
 ```
-with some boilerplate
+That's all the Elm you need. Compile and run it with:
+```bash
+$ elm-benchmark Test.elm test.js
+Generating JavaScript ... Done
+Making exe
+
+$ node test.js
+testAdd10 x 22,790,539 ops/sec ±0.31% (98 runs sampled)
+```
+And you can see the benchmark test results.
+
+For more complicated functions, you can set them up as functions that take a dummy
+`Int` and return a dummy `Int`, as we don't care about the actual value. Elm is
+strictly evaluated, so even if we discard the result of a function call, it will
+still execute. Here's an example:
 ```haskell
--- | Can't use a type alias in ports, yet :/
-port requests : Signal [{ mPut  : Maybe String
-                        , mExit : Maybe Int
-                        , mGet  : Bool
-                        }]
-port requests = Run.run responses hello
+module Benchmark where
 
-port responses : Signal (Maybe String)
+import Dict
+
+-- Helper function to discard results
+discard : a -> Int
+discard _ = 0
+
+-- Test setup
+list = zip [1..1000] [1..1000]
+
+-- Benchmark tests:
+port testDictFromList : Int -> Int
+port testDictFromList = \_ -> discard . Dict.fromList <| list
 ```
-link in some javascript and then run:
-```
-$ cabal run Test.elm hello.js
-$ node hello.js
-Hello, Console!
-I'll echo your input:
-hooray
-hooray
-That's all, folks!
+Again, compile and run it with:
+```bash
+$ elm-benchmark Test.elm test.js
+Generating JavaScript ... Done
+Making exe
+
+$ node test.js
+testDictFromList x 50.91 ops/sec ±0.37% (68 runs sampled)
 ```
 
 Command Line Interface
 ----------------------
-The basic interface is `elm-io infile outfile`, where `infile` is an
+The basic interface is `elm-benchmark infile outfile`, where `infile` is an
 Elm source file to compile and `outfile` is the resulting JavaScript
-file to be run with node. `elm-io` will automatically include its own
-data directory as a `--src-dir` argument to the Elm compiler, meaning
-you don't have to manually copy the IO library to your project's directory.
-The `infile` module MUST be `Main`, that is to say that the source file must
-have `module Main where` as the first line. This restriction may be lifted
-in the future.
-
-There is currently one optional flag: `--default-ports`. Usage is like this:
-`elm-io --default-ports infile outfile`. If this flag is present, the port
-boilerplate seen in the above example will be appended to the end of your Elm
-source file. In this configuration, you must define a function `console : IO ()`
-which effectively takes the place of the `main : Signal Element` function in
-normal graphical Elm programs. A full, yet basic example of a program written
-with this flag is:
-```haskell
-module Main where
-
-import open IO.IO
-
-console : IO ()
-console = putStrLn "This is a test" >>
-          exit 0
-```
-When this file is compiled like `elm-io --default-ports Test.elm test.js`, the
-following code will be inserted after the module delcaration:
-```haskell
-import IO.Runner (Request, Response)
-import IO.Runner as Run
-```
-and the following code will be appended to the end of the file:
-```haskell
-port requests : Signal [{ mPut  : Maybe String
-                        , mExit : Maybe Int
-                        , mGet  : Bool
-                        }]
-port requests = Run.run responses console
-
-port responses : Signal (Maybe String)
-```
-The file will then be compiled to `test.js`, which is runnable with node.
-Keep in mind that the `evancz/automaton` and `jsdom` dependencies must still
-be installed in each project directory!
-
-A working example can be seen in the [Elm-Test Travis CI configuration](https://github.com/deadfoxygrandpa/Elm-Test/blob/master/.travis.yml).
-
-Design and Implementation
--------------------------
-The basic IO construct is a free monad, inspired by the
-[IOSpec](http://hackage.haskell.org/package/IOSpec) haskell
-library. Building something of type `IO a` makes an IO program that
-can be run by a runtime system, yielding an `a`. The `run` function in
-`IO.Runner` turns an `IO` program into an actor that communicates with
-a handler. The handler can then communicate with the `IO` actor if the
-ports are set up correctly. See the `Test.elm`, `mkExe`,
-`prescript.js` and `handler.js` files to see how this is implemented.
-
-The implementation currently uses putChar/getChar/exit as its
-primitives, and other actions like putStrLn are built on top of
-those. This is not optimal performance-wise, but is a proof-of-concept
-that the `IO` type can be used to build complex programs from smaller
-ones.
+file to be run with node. The `infile` module MUST be `Benchmark`, 
+that is to say that the source file must have `module Benchmark where` as 
+the first line. This restriction may be lifted in the future.
