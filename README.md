@@ -40,7 +40,7 @@ testAdd10 x 22,790,539 ops/sec ±0.31% (98 runs sampled)
 And you can see the benchmark test results.
 
 For more complicated functions, you can set them up as functions that take a dummy
-`Int` and return a dummy `Int`, as we don't care about the actual value. Elm is
+`()` and return a dummy `()`, as we don't care about the actual value. Elm is
 strictly evaluated, so even if we discard the result of a function call, it will
 still execute. Here's an example:
 ```haskell
