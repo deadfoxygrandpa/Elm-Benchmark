@@ -11,13 +11,13 @@
       console.log(String(event.target));
     });
 
-    var makeTest = function(x) { return function () { x(0); } };
+    var makeTest = function(x) { return function () { x([]); } };
 
     for (var key in worker.ports) {
         var name = key.toString();
         suite.add(name, makeTest( eval("worker.ports." + name) ));
     }
-    
+
     suite.run();
 
 })();

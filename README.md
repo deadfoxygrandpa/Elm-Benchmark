@@ -19,13 +19,13 @@ $ npm install jsdom
 
 Example
 -------
-Each test must be an outgoing `port` of type `Int -> Int`. Define any number
-of these `Int -> Int` tests in a module named `Benchmark`. Here's an example:
+Each test must be an outgoing `port` of type `() -> ()`. Define any number
+of these `() -> ()` tests in a module named `Benchmark`. Here's an example:
 ```haskell
 -- Test.elm
 module Benchmark where
 
-port testAdd10 : Int -> Int
+port testAdd10 : () -> ()
 port testAdd10 = \n -> n + 10
 ```
 That's all the Elm you need. Compile and run it with:
@@ -56,7 +56,7 @@ discard _ = 0
 list = zip [1..1000] [1..1000]
 
 -- Benchmark tests:
-port testDictFromList : Int -> Int
+port testDictFromList : () -> ()
 port testDictFromList = \_ -> discard . Dict.fromList <| list
 ```
 Again, compile and run it with:
@@ -73,6 +73,6 @@ Command Line Interface
 ----------------------
 The basic interface is `elm-benchmark infile outfile`, where `infile` is an
 Elm source file to compile and `outfile` is the resulting JavaScript
-file to be run with node. The `infile` module MUST be `Benchmark`, 
-that is to say that the source file must have `module Benchmark where` as 
+file to be run with node. The `infile` module MUST be `Benchmark`,
+that is to say that the source file must have `module Benchmark where` as
 the first line. This restriction may be lifted in the future.

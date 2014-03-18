@@ -1,6 +1,9 @@
 module Benchmark where
 
-type BenchmarkTest = Int -> Int
+type BenchmarkTest = () -> ()
+
+discard : a -> ()
+discard _ = ()
 
 port add : Int -> Int
-port add = \_ -> 5 + 10
+port add = \_ -> discard <| 5 + 10
