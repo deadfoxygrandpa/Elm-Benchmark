@@ -49,8 +49,8 @@ module Benchmark where
 import Dict
 
 -- Helper function to discard results
-discard : a -> Int
-discard _ = 0
+discard : a -> ()
+discard _ = ()
 
 -- Test setup
 list = zip [1..1000] [1..1000]
