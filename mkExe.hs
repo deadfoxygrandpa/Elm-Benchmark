@@ -61,6 +61,7 @@ main = do
         "elm" -> do code <- compile infile
                     buildJS code infile outfile
         "js"  -> buildJSFromJS infile outfile
+        _ -> putStrLn $ "Expected input file and output file arguments, but got " ++ show (length args) ++ " args."
     [infile, scripts, outfile] -> do
       code <- compileScripts infile scripts
       buildJS code infile outfile
