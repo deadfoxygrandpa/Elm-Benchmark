@@ -33,6 +33,17 @@ buildJS code infile outfile = case code of
               , postscript ]
               outfile
 
+buildJSFromJS :: FilePath -> FilePath -> IO ()
+buildJSFromJS infile outfile = do
+  putStrLn "Making exe"
+  prescript    <- ElmBenchmark.getDataFileName "prescript.js"
+  postscript   <- ElmBenchmark.getDataFileName "postscript.js"
+  catToFile [ prescript
+            , Elm.runtime
+            , infile
+            , postscript ]
+            outfile
+
 compile :: FilePath -> IO ExitCode
 compile infile = do
   rawSystem "elm" ["-mo", infile]
@@ -45,9 +56,11 @@ main :: IO ()
 main = do
   args <- getArgs
   case args of
-    [infile, outfile] -> do
-      code <- compile infile
-      buildJS code infile outfile
+    [infile, outfile] ->
+      case takeExtension infile of
+        "elm" -> do code <- compile infile
+                    buildJS code infile outfile
+        "js"  -> buildJSFromJS infile outfile
     [infile, scripts, outfile] -> do
       code <- compileScripts infile scripts
       buildJS code infile outfile
