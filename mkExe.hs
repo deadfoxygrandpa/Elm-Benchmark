@@ -37,11 +37,18 @@ compile :: FilePath -> IO ExitCode
 compile infile = do
   rawSystem "elm" ["-mo", infile]
 
+compileScripts :: FilePath -> FilePath -> IO ExitCode
+compileScripts infile scripts = do
+  rawSystem "elm" ["-mo", "--scripts=" ++ scripts, infile]
+
 main :: IO ()
 main = do
   args <- getArgs
   case args of
     [infile, outfile] -> do
       code <- compile infile
+      buildJS code infile outfile
+    [infile, scripts, outfile] -> do
+      code <- compileScripts infile scripts
       buildJS code infile outfile
     _ -> putStrLn $ "Expected input file and output file arguments, but got " ++ show (length args) ++ " args."
