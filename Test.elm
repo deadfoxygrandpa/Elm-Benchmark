@@ -5,5 +5,5 @@ type BenchmarkTest = () -> ()
 discard : a -> ()
 discard _ = ()
 
-port add : Int -> Int
+port add : () -> ()
 port add = \_ -> discard <| 5 + 10

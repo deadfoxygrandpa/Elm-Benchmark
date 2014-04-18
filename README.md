@@ -25,8 +25,11 @@ of these `() -> ()` tests in a module named `Benchmark`. Here's an example:
 -- Test.elm
 module Benchmark where
 
+discard : () -> ()
+discard _ = ()
+
 port testAdd10 : () -> ()
-port testAdd10 = \n -> n + 10
+port testAdd10 = \_ -> discard <| n + 10
 ```
 That's all the Elm you need. Compile and run it with:
 ```bash
