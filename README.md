@@ -25,7 +25,7 @@ of these `() -> ()` tests in a module named `Benchmark`. Here's an example:
 -- Test.elm
 module Benchmark where
 
-discard : () -> ()
+discard : a -> ()
 discard _ = ()
 
 port testAdd10 : () -> ()
@@ -50,17 +50,18 @@ still execute. Here's an example:
 module Benchmark where
 
 import Dict
+import List
 
 -- Helper function to discard results
 discard : a -> ()
 discard _ = ()
 
 -- Test setup
-list = zip [1..1000] [1..1000]
+list = List.zip [1..1000] [1..1000]
 
 -- Benchmark tests:
 port testDictFromList : () -> ()
-port testDictFromList = \_ -> discard . Dict.fromList <| list
+port testDictFromList = \_ -> discard << Dict.fromList <| list
 ```
 Again, compile and run it with:
 ```bash

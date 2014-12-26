@@ -8,7 +8,6 @@ import           System.Environment
 import           System.IO (hClose, openTempFile)
 import           System.Directory
 
-import           Elm.Internal.Paths as Elm
 import qualified Paths_ElmBenchmark as ElmBenchmark
 
 catToFile :: [FilePath] -> FilePath -> IO ()
@@ -28,8 +27,7 @@ buildJS code infile outfile = case code of
     prescript    <- ElmBenchmark.getDataFileName "prescript.js"
     postscript   <- ElmBenchmark.getDataFileName "postscript.js"
     catToFile [ prescript
-              , Elm.runtime
-              , "build" </> replaceExtension infile "js"
+              , "elm.js"
               , postscript ]
               outfile
 
@@ -39,18 +37,13 @@ buildJSFromJS infile outfile = do
   prescript    <- ElmBenchmark.getDataFileName "prescript.js"
   postscript   <- ElmBenchmark.getDataFileName "postscript.js"
   catToFile [ prescript
-            , Elm.runtime
             , infile
             , postscript ]
             outfile
 
 compile :: FilePath -> IO ExitCode
 compile infile = do
-  rawSystem "elm" ["-mo", infile]
-
-compileScripts :: FilePath -> FilePath -> IO ExitCode
-compileScripts infile scripts = do
-  rawSystem "elm" ["-mo", "--scripts=" ++ scripts, infile]
+  rawSystem "elm-make" [infile, "--yes"]
 
 main :: IO ()
 main = do
@@ -61,8 +54,6 @@ main = do
         ".elm" -> do code <- compile infile
                      buildJS code infile outfile
         ".js"  -> buildJSFromJS infile outfile
-        _ -> putStrLn $ "Expected input file and output file arguments, but got " ++ show (length args) ++ " args."
-    [infile, scripts, outfile] -> do
-      code <- compileScripts infile scripts
-      buildJS code infile outfile
-    _ -> putStrLn $ "Expected input file and output file arguments, but got " ++ show (length args) ++ " args."
+        _ -> err args
+    _ -> err args
+  where err args = putStrLn $ "Expected input file and output file arguments, but got " ++ show (length args) ++ " args."
